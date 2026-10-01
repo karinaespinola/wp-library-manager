@@ -1,0 +1,10 @@
+{
+  "name": "karina/wp-library-manager",
+  "description": "Custom WordPress library management plugin",
+  "type": "wordpress-plugin",
+  "autoload": {
+    "psr-4": {
+      "WLM\\": "src/"
+    }
+  }
+}

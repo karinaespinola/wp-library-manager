@@ -12,6 +12,7 @@ use WLM\Repositories\BookRepository;
 use WLM\Shortcodes\BooksShortcode;
 use WLM\Assets\FrontendAssets;
 use WLM\Rest\BooksController;
+use WLM\Services\BookService;
 
 defined('ABSPATH') || exit;
 
@@ -19,7 +20,7 @@ class Plugin
 {
     /**
      * @var Bootable[]
-     */    
+     */
     private array $services = [];
 
     public function __construct()
@@ -32,7 +33,7 @@ class Plugin
             new BookDetailsMetaBox(),
             new BooksShortcode(new BookRepository()),
             new FrontendAssets(),
-            new BooksController(new BookRepository()),
+            new BooksController(new BookRepository(), new BookService()),
         ];
     }
 
@@ -46,8 +47,8 @@ class Plugin
     public static function activate(): void
     {
         add_option(
-        'wlm_books_per_page',
-        12
+            'wlm_books_per_page',
+            12
         );
 
         $book_post_type = new PostTypes\BookPostType();

@@ -4,9 +4,16 @@ namespace WLM\Services;
 
 use WP_REST_Request;
 use WP_REST_Response;
+use WLM\Repositories\BookRepository;
 
 class BookService
 {
+    private BookRepository $repository;
+
+    public function __construct()
+    {
+        $this->repository = new BookRepository();
+    }
 
     public function store(WP_REST_Request $request): WP_REST_Response|\WP_Error
     {

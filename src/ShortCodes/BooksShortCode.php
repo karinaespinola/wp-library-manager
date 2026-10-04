@@ -9,8 +9,7 @@ class BooksShortcode implements Bootable
 {
     public function __construct(
         private BookRepository $repository
-    ) {
-    }
+    ) {}
 
     public function boot(): void
     {
@@ -23,15 +22,21 @@ class BooksShortcode implements Bootable
     public function render(array $atts = []): string
     {
         wp_enqueue_style('wlm-books');
-        wp_enqueue_script('wlm-books');    
+        wp_enqueue_script('wlm-books');
+
+        $default_limit = (int) get_option(
+            'wlm_books_per_page',
+            12
+        );
+
         $atts = shortcode_atts(
-                [
-                    'limit' => 10,
-                    'genre' => '',
-                ],
-                $atts,
-                'wlm_books'
-            );
+            [
+                'limit' => $default_limit,
+                'genre' => '',
+            ],
+            $atts,
+            'wlm_books'
+        );
 
         $limit = absint($atts['limit']);
         $genre = sanitize_key($atts['genre']);

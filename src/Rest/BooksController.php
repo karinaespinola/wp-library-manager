@@ -34,7 +34,7 @@ class BooksController implements Bootable
                 [
                     'methods'  => 'GET',
                     'callback' => [$this, 'show'],
-                    'permission_callback' => '__return_true',
+                    'permission_callback' => [$this, 'canViewBooks'],
                 ],
                 [
                     'methods'             => 'PUT',
@@ -56,7 +56,7 @@ class BooksController implements Bootable
                 [
                     'methods'             => 'GET',
                     'callback'            => [$this->bookService, 'index'],
-                    'permission_callback' => '__return_true',
+                    'permission_callback' => [$this, 'canViewBooks'],
                 ],
 
                 [
@@ -120,5 +120,19 @@ class BooksController implements Bootable
             'delete_book',
             $id
         );
+    }
+
+    public function canViewBooks(): bool
+    {
+        $public_api = (bool) get_option(
+            'wlm_public_api',
+            true
+        );
+
+        if ($public_api) {
+            return true;
+        }
+
+        return current_user_can('read');
     }
 }

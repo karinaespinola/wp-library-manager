@@ -11,8 +11,7 @@ class BooksController implements Bootable
 {
     public function __construct(
         private BookRepository $repository
-    ) {
-    }
+    ) {}
 
     public function boot(): void
     {
@@ -26,22 +25,65 @@ class BooksController implements Bootable
     {
         register_rest_route(
             'wlm/v1',
-            '/books',
+            '/books/(?P<id>\d+)',
             [
-                'methods'  => 'GET',
-                'callback' => [$this, 'index'],
-                'permission_callback' => '__return_true',
+                [
+                    'methods'  => 'GET',
+                    'callback' => [$this, 'show'],
+                    'permission_callback' => '__return_true',
+                ],
+                [
+                    'methods'             => 'PUT',
+                    'callback'            => [$this, 'update'],
+                    'permission_callback' => [$this, 'canUpdate'],
+                ],
+                [
+                    'methods'             => 'DELETE',
+                    'callback'            => [$this, 'destroy'],
+                    'permission_callback' => [$this, 'canDelete'],
+                ],
             ]
         );
 
         register_rest_route(
             'wlm/v1',
-            '/books/(?P<id>\d+)',
+            '/books',
             [
-                'methods'  => 'GET',
-                'callback' => [$this, 'show'],
-                'permission_callback' => '__return_true',
-            ]
+                [
+                    'methods'             => 'GET',
+                    'callback'            => [$this, 'index'],
+                    'permission_callback' => '__return_true',
+                ],
+
+                [
+                    'methods'             => 'POST',
+                    'callback'            => [$this, 'store'],
+                    'permission_callback' => [$this, 'canCreate'],
+                    'args' => [
+                        'title' => [
+                            'required' => true,
+                            'sanitize_callback' => 'sanitize_text_field',
+                        ],
+
+                        'year' => [
+                            'sanitize_callback' => 'absint',
+                        ],
+
+                        'pages' => [
+                            'sanitize_callback' => 'absint',
+                        ],
+
+                        'isbn' => [
+                            'sanitize_callback' => 'sanitize_text_field',
+                        ],
+
+                        'genre' => [
+                            'sanitize_callback' => 'sanitize_key',
+                        ],
+                    ],
+                ],
+            ],
+
         );
     }
 
@@ -85,18 +127,18 @@ class BooksController implements Bootable
     }
 
     public function show(
-    WP_REST_Request $request
+        WP_REST_Request $request
     ): WP_REST_Response {
         $id = absint($request->get_param('id'));
 
         $post = get_post($id);
 
-        if (! $post || $post->post_type !== 'book') 
-        {
-            return new WP_REST_Response([
-                'message' => 'Book not found',
-                    ],
-        404
+        if (! $post || $post->post_type !== 'book') {
+            return new WP_REST_Response(
+                [
+                    'message' => 'Book not found',
+                ],
+                404
             );
         }
 
@@ -108,6 +150,210 @@ class BooksController implements Bootable
                 'wlm_year',
                 true
             ),
+            'pages' => (int) get_post_meta(
+                $post->ID,
+                'wlm_pages',
+                true
+            ),
         ]);
+    }
+
+    public function canCreate(): bool
+    {
+        return current_user_can('edit_posts');
+    }
+
+    public function store(WP_REST_Request $request): WP_REST_Response|\WP_Error
+    {
+        $title = sanitize_text_field($request->get_param('title') ?? '');
+
+        if ($title === '') {
+            return new \WP_Error(
+                'wlm_missing_title',
+                'Title is required.',
+                [
+                    'status' => 422,
+                ]
+            );
+        }
+
+        $post_id = wp_insert_post(
+            [
+                'post_type'   => 'book',
+                'post_status' => 'publish',
+                'post_title'  => $title,
+            ],
+            true
+        );
+
+        if (is_wp_error($post_id)) {
+            return $post_id;
+        }
+
+        $year = absint($request->get_param('year'));
+
+        $pages = absint($request->get_param('pages'));
+
+        $isbn = sanitize_text_field($request->get_param('isbn') ?? '');
+
+        if ($year > 0) {
+            update_post_meta(
+                $post_id,
+                'wlm_year',
+                $year
+            );
+        }
+
+        if ($pages > 0) {
+            update_post_meta(
+                $post_id,
+                'wlm_pages',
+                $pages
+            );
+        }
+
+        if ($isbn !== '') {
+            update_post_meta(
+                $post_id,
+                'wlm_isbn',
+                $isbn
+            );
+        }
+
+        $genre = sanitize_key(
+            $request->get_param('genre') ?? ''
+        );
+
+        if ($genre !== '') {
+            wp_set_object_terms(
+                $post_id,
+                $genre,
+                'genre'
+            );
+        }
+
+        return new WP_REST_Response(
+            [
+                'id'      => $post_id,
+                'message' => 'Book created successfully.',
+            ],
+            201
+        );
+    }
+
+    public function canUpdate(WP_REST_Request $request): bool
+    {
+        $id = absint(
+            $request->get_param('id')
+        );
+
+        return current_user_can(
+            'edit_post',
+            $id
+        );
+    }
+
+    public function canDelete(WP_REST_Request $request): bool
+    {
+        $id = absint(
+            $request->get_param('id')
+        );
+
+        return current_user_can(
+            'delete_post',
+            $id
+        );
+    }
+
+    public function update(
+        WP_REST_Request $request
+    ): WP_REST_Response|\WP_Error {
+        $id = absint(
+            $request->get_param('id')
+        );
+
+        $post = get_post($id);
+
+        if (
+            ! $post ||
+            $post->post_type !== 'book'
+        ) {
+            return new \WP_Error(
+                'wlm_book_not_found',
+                'Book not found.',
+                [
+                    'status' => 404,
+                ]
+            );
+        }
+
+        $title = $request->get_param('title');
+
+        if ($title !== null) {
+            $result = wp_update_post(
+                [
+                    'ID'         => $id,
+                    'post_title' => sanitize_text_field($title),
+                ],
+                true
+            );
+
+            if (is_wp_error($result)) {
+                return $result;
+            }
+        }
+
+        if ($request->has_param('year')) {
+            update_post_meta(
+                $id,
+                'wlm_year',
+                absint($request->get_param('year'))
+            );
+        }
+    }
+
+    public function destroy(
+        WP_REST_Request $request
+    ): WP_REST_Response|\WP_Error {
+        $id = absint(
+            $request->get_param('id')
+        );
+
+        $post = get_post($id);
+
+        if (
+            ! $post ||
+            $post->post_type !== 'book'
+        ) {
+            return new \WP_Error(
+                'wlm_book_not_found',
+                'Book not found.',
+                [
+                    'status' => 404,
+                ]
+            );
+        }
+
+        $result = wp_delete_post(
+            $id,
+            true
+        );
+
+        if (! $result) {
+            return new \WP_Error(
+                'wlm_delete_failed',
+                'Unable to delete book.',
+                [
+                    'status' => 500,
+                ]
+            );
+        }
+
+        return new WP_REST_Response(
+            [
+                'message' => 'Book deleted successfully.',
+            ],
+            200
+        );
     }
 }

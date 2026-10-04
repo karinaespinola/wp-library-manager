@@ -23,6 +23,15 @@ class FrontendAssets implements Bootable
             filemtime(WLM_PLUGIN_PATH . 'assets/css/books.css')
         );
 
+        wp_localize_script(
+            'wlm-books',
+            'wlmData',
+            [
+                'restUrl' => rest_url('wlm/v1/'),
+                'nonce'   => wp_create_nonce('wp_rest'),
+            ]
+        );
+
         wp_register_script(
             'wlm-books',
             WLM_PLUGIN_URL . 'assets/js/books.js',

@@ -1,0 +1,18 @@
+.wlm-books {
+    display: grid;
+    gap: 1rem;
+}
+
+.wlm-book {
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.wlm-book h3 {
+    margin-top: 0;
+}
+
+.wlm-book.is-active {
+    transform: scale(1.02);
+}

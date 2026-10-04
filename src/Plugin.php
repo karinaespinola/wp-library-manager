@@ -10,6 +10,8 @@ use WLM\Filters\BookTitleFilter;
 use WLM\Contracts\Bootable;
 use WLM\Repositories\BookRepository;
 use WLM\Shortcodes\BooksShortcode;
+use WLM\Assets\FrontendAssets;
+use WLM\Rest\BooksController;
 
 defined('ABSPATH') || exit;
 
@@ -29,6 +31,8 @@ class Plugin
             new BookTitleFilter(),
             new BookDetailsMetaBox(),
             new BooksShortcode(new BookRepository()),
+            new FrontendAssets(),
+            new BooksController(new BookRepository()),
         ];
     }
 

@@ -21,5 +21,15 @@ register_deactivation_hook(
     ['WLM\\Plugin', 'deactivate']
 );
 
+define(
+    'WLM_PLUGIN_PATH',
+    plugin_dir_path(__FILE__)
+);
+
+define(
+    'WLM_PLUGIN_URL',
+    plugin_dir_url(__FILE__)
+);
+
 $plugin = new WLM\Plugin();
 $plugin->boot();

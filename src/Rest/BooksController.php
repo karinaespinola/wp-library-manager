@@ -95,10 +95,8 @@ class BooksController implements Bootable
 
     public function canCreate(): bool
     {
-        return current_user_can('edit_posts');
+        return current_user_can('edit_books');
     }
-
-
 
     public function canUpdate(WP_REST_Request $request): bool
     {
@@ -107,7 +105,7 @@ class BooksController implements Bootable
         );
 
         return current_user_can(
-            'edit_post',
+            'edit_book',
             $id
         );
     }
@@ -119,7 +117,7 @@ class BooksController implements Bootable
         );
 
         return current_user_can(
-            'delete_post',
+            'delete_book',
             $id
         );
     }

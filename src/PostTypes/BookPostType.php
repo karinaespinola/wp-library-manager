@@ -14,28 +14,27 @@ class BookPostType implements Bootable
             'init',
             [$this, 'register']
         );
-    }    
+    }
     public function register(): void
-        {
-            register_post_type('book', [
-                'labels' => [
-                    'name'          => 'Books',
-                    'singular_name' => 'Book',
-                    'add_new_item'  => 'Add New Book',
-                    'edit_item'     => 'Edit Book',
-                ],
+    {
+        register_post_type('book', [
+            'labels' => [
+                'name'          => 'Books',
+                'singular_name' => 'Book',
+            ],
 
-                'public'       => true,
-                'show_in_rest' => true,
+            'public' => true,
+            'show_in_rest' => true,
 
-                'supports' => [
-                    'title',
-                    'editor',
-                    'thumbnail',
-                    'excerpt',
-                ],
+            'capability_type' => ['book', 'books'],
 
-                'menu_icon' => 'dashicons-book',
-            ]);
-        }
+            'map_meta_cap' => true,
+
+            'supports' => [
+                'title',
+                'editor',
+                'thumbnail',
+            ],
+        ]);
+    }
 }

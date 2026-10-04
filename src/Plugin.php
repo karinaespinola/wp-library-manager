@@ -13,6 +13,7 @@ use WLM\Shortcodes\BooksShortcode;
 use WLM\Assets\FrontendAssets;
 use WLM\Rest\BooksController;
 use WLM\Services\BookService;
+use WLM\Capabilities\BookCapabilities;
 
 defined('ABSPATH') || exit;
 
@@ -37,6 +38,7 @@ class Plugin
         ];
     }
 
+
     public function boot(): void
     {
         foreach ($this->services as $service) {
@@ -53,6 +55,8 @@ class Plugin
 
         $book_post_type = new PostTypes\BookPostType();
         $book_post_type->register();
+        BookCapabilities::addToAdministrator();
+        BookCapabilities::createLibraryManagerRole();
         flush_rewrite_rules();
     }
 

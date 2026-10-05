@@ -15,6 +15,7 @@ use WLM\Rest\BooksController;
 use WLM\Services\BookService;
 use WLM\Capabilities\BookCapabilities;
 use WLM\Admin\SettingsPage;
+use WLM\Admin\ReportsPage;
 
 defined('ABSPATH') || exit;
 
@@ -37,6 +38,7 @@ class Plugin
             new FrontendAssets(),
             new BooksController(new BookRepository(), new BookService()),
             new SettingsPage(),
+            new ReportsPage(),
         ];
     }
 

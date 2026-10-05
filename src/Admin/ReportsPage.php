@@ -3,9 +3,14 @@
 namespace WLM\Admin;
 
 use WLM\Contracts\Bootable;
+use WLM\Services\ReportService;
 
 class ReportsPage implements Bootable
 {
+    public function __construct(
+        private ReportService $reportService
+    ) {}
+
     public function boot(): void
     {
         add_action(
@@ -38,10 +43,10 @@ class ReportsPage implements Bootable
             wp_die('You are not allowed to access this page.');
         }
 
-        $counts = wp_count_posts('book');
+        $counts = $this->reportService->getData();
 
-        $published = (int) ($counts->publish ?? 0);
-        $drafts = (int) ($counts->draft ?? 0);
+        $published = (int) ($counts['published'] ?? 0);
+        $drafts = (int) ($counts['drafts'] ?? 0);
 
         $genre = isset($_GET['genre'])
             ? sanitize_key($_GET['genre'])
@@ -206,12 +211,17 @@ class ReportsPage implements Bootable
             wp_die('You are not allowed to do this.');
         }
 
-        // recalcular
+        $this->reportService->clearCache();
 
+        $this->reportService->getData();
 
         wp_safe_redirect(
-            admin_url(
-                'admin.php?page=wlm-reports&recalculated=1'
+            add_query_arg(
+                [
+                    'page'         => 'wlm-reports',
+                    'recalculated' => '1',
+                ],
+                admin_url('admin.php')
             )
         );
 

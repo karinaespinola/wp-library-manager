@@ -16,6 +16,7 @@ use WLM\Services\BookService;
 use WLM\Capabilities\BookCapabilities;
 use WLM\Admin\SettingsPage;
 use WLM\Admin\ReportsPage;
+use WLM\Services\ReportService;
 
 defined('ABSPATH') || exit;
 
@@ -28,6 +29,8 @@ class Plugin
 
     public function __construct()
     {
+        $reportService = new ReportService();
+
         $this->services = [
             new BookPostType(),
             new GenreTaxonomy(),
@@ -38,11 +41,10 @@ class Plugin
             new FrontendAssets(),
             new BooksController(new BookRepository(), new BookService()),
             new SettingsPage(),
-            new ReportsPage(),
+            $reportService,
+            new ReportsPage($reportService),
         ];
     }
-
-
     public function boot(): void
     {
         foreach ($this->services as $service) {

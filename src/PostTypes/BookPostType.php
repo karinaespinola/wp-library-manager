@@ -35,6 +35,7 @@ class BookPostType implements Bootable
                 'editor',
                 'thumbnail',
             ],
+            'has_archive' => true,
         ]);
     }
 }
